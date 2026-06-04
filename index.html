@@ -1235,11 +1235,17 @@
     let deckWarmupTimer = 0;
 
     function switchStage(next) {
+      const previousStage = currentStage;
       Object.entries(stages).forEach(([name, el]) => el.classList.toggle('active', name === next));
       currentStage = next;
       body.classList.toggle('intro-state', next === 'intro');
       body.classList.toggle('ask-state', next === 'ask');
       body.classList.toggle('recommend-state', next === 'recommend');
+      if (previousStage === 'recommend' && next !== 'recommend') deactivateCard();
+      if (next !== 'recommend') {
+        window.clearTimeout(deckWarmupTimer);
+        pauseDeckVideos();
+      }
       if (next === 'detail') restartMutedVideo(document.getElementById('detailVideo'));
       if (next === 'recommend') scheduleDeckWarmup();
       if (next !== 'detail' && next !== 'echo') pauseDetailVideos();
@@ -1540,6 +1546,25 @@
       });
     }
 
+    function pauseDeckVideos() {
+      deck.querySelectorAll('video').forEach(video => {
+        video.pause();
+      });
+    }
+
+    function resetToIntro() {
+      window.cancelAnimationFrame(runRecommend.frame || 0);
+      window.clearTimeout(deckWarmupTimer);
+      deactivateCard();
+      pauseDeckVideos();
+      deck.innerHTML = '';
+      deckCards = [];
+      deckOffset = 0;
+      hoveredItem = null;
+      deckClickReadyAt = 0;
+      switchStage('intro');
+    }
+
     function runRecommend(inputOverride) {
       switchStage('recommend');
       window.cancelAnimationFrame(runRecommend.frame);
@@ -1601,7 +1626,7 @@
       }
     });
 
-    document.getElementById('brandHome').addEventListener('click', () => switchStage('intro'));
+    document.getElementById('brandHome').addEventListener('click', resetToIntro);
     document.getElementById('toRecommend').addEventListener('click', () => runRecommend());
     document.getElementById('backToRecommend').addEventListener('click', () => switchStage('recommend'));
     document.getElementById('detailCheckin').addEventListener('click', () => openEcho('detail'));
