@@ -1027,6 +1027,7 @@
     const asset = name => `assets/optimized-v1/visual/${encodeURIComponent(name.replace(/\.png$/, '.webp'))}`;
     const posterAsset = name => `assets/optimized-v1/posters/${encodeURIComponent(name.replace(/\.png$/, '.webp'))}`;
     const videoAsset = name => `assets/optimized-v1/video/${encodeURIComponent(name)}`;
+    const previewAsset = video => video.replace('/video/', '/preview/');
 
     const stages = {
       intro: document.getElementById('stageIntro'),
@@ -1358,7 +1359,7 @@
         item.dataset.index = index;
         item.innerHTML = `
           <div class="place-card" style="--poster: url('${spot.poster}')">
-            <video data-src="${spot.video}" poster="${spot.poster}" muted loop playsinline preload="none"></video>
+            <video data-src="${previewAsset(spot.video)}" poster="${spot.poster}" muted loop playsinline preload="none"></video>
             <div class="card-time">步行 ${spot.walk} 分钟</div>
           </div>
           <div class="card-hint">${spot.hint}</div>
@@ -1395,12 +1396,9 @@
 
     function warmDeckVideos() {
       if (!deckCards.length) return;
-      const center = (deckCards.length - 1) / 2;
       document.querySelectorAll('.place-item').forEach(item => {
         const video = item.querySelector('video');
         if (!video) return;
-        const index = Number(item.dataset.index);
-        if (Math.abs(index - center) > 1) return;
         ensureVideoSource(video);
         video.preload = 'metadata';
         revealVideoWhenPainted(video);
