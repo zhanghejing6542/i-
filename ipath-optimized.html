@@ -1398,7 +1398,7 @@
       if (!deckCards.length) return;
       document.querySelectorAll('.place-item').forEach(item => {
         const video = item.querySelector('video');
-        if (!video) return;
+        if (!video || item === hoveredItem) return;
         ensureVideoSource(video);
         video.preload = 'metadata';
         revealVideoWhenPainted(video);
