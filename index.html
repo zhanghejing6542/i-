@@ -1367,6 +1367,8 @@
         const markVideoReady = () => revealVideoWhenPainted(video);
         video.addEventListener('loadeddata', markVideoReady);
         video.addEventListener('canplay', markVideoReady);
+        video.addEventListener('playing', markVideoReady);
+        video.addEventListener('error', () => item.querySelector('.place-card').classList.remove('video-ready'));
         if (video.readyState >= 2) markVideoReady();
         item.addEventListener('click', event => {
           event.preventDefault();
@@ -1385,11 +1387,10 @@
       if (!video || video.readyState < 2) return;
       const card = video.closest('.place-card');
       const reveal = () => card?.classList.add('video-ready');
-      if ('requestVideoFrameCallback' in video) {
-        video.requestVideoFrameCallback(reveal);
-      } else {
-        requestAnimationFrame(reveal);
-      }
+      // Hidden video layers may not receive a frame callback until they are visible.
+      requestAnimationFrame(() => {
+        if (video.readyState >= 2 && !video.error) reveal();
+      });
     }
 
     function warmDeckVideos() {
@@ -1402,7 +1403,6 @@
         if (Math.abs(index - center) > 1) return;
         ensureVideoSource(video);
         video.preload = 'auto';
-        if (video.readyState < 2) video.load();
         revealVideoWhenPainted(video);
       });
     }
@@ -1418,13 +1418,6 @@
         const promise = video.play();
         if (promise) promise.then(() => revealVideoWhenPainted(video)).catch(() => revealVideoWhenPainted(video));
       };
-      if (video.readyState < 2) {
-        video.addEventListener('loadeddata', () => {
-          revealVideoWhenPainted(video);
-          playVideo();
-        }, { once: true });
-        video.load();
-      }
       playVideo();
     }
 
@@ -1493,7 +1486,13 @@
     }
 
     function updateDeckPointerFromPoint(clientX, clientY) {
-      if (currentStage !== 'recommend' || window.innerWidth <= 860) return;
+      if (currentStage !== 'recommend') return;
+      if (window.innerWidth <= 860) {
+        const item = getVisualPlaceItem(clientX, clientY);
+        if (item) activateCard(item);
+        else deactivateCard();
+        return;
+      }
       if (!isInDeckControlBand(clientY)) {
         deactivateCard();
         return;
