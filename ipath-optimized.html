@@ -985,7 +985,7 @@
       <div class="screen echo">
         <div class="echo-card">
           <div class="echo-place">
-            <img id="echoPlaceImage" src="assets/visual/点位图5-阶梯坡.png" alt="" />
+            <img id="echoPlaceImage" alt="" style="visibility: hidden" />
           </div>
           <div>
             <h2>记录此刻心情</h2>
@@ -1530,6 +1530,7 @@
       ].map(item => `<span class="meta">${item}</span>`).join('');
 
       document.getElementById('placeSelect').value = spot.name;
+      prepareEchoImage(spot);
       document.getElementById('replyText').textContent = makeReply('', spot.name);
       document.getElementById('replySub').textContent = `记录于「${spot.name}」。这句回应只保留在当前页面里。`;
     }
@@ -1596,11 +1597,42 @@
       document.getElementById('placeSelect').innerHTML = spots.map(spot => `<option value="${spot.name}">${spot.name}</option>`).join('');
     }
 
-    function updateEchoPlace(placeName) {
+    const echoImageCache = new Map();
+    let echoImageRequest = 0;
+
+    function prepareEchoImage(spot) {
+      if (!echoImageCache.has(spot.id)) {
+        const image = new Image();
+        const ready = new Promise((resolve, reject) => {
+          image.onload = () => image.decode().then(() => resolve(image), reject);
+          image.onerror = reject;
+          image.src = spot.image;
+        }).catch(() => {
+          echoImageCache.delete(spot.id);
+          return null;
+        });
+        echoImageCache.set(spot.id, ready);
+      }
+      return echoImageCache.get(spot.id);
+    }
+
+    async function updateEchoPlace(placeName) {
       const spot = spots.find(item => item.name === placeName) || currentSelection;
+      const request = ++echoImageRequest;
       const img = document.getElementById('echoPlaceImage');
-      img.src = spot.image;
-      img.alt = spot.name;
+      if (img.dataset.placeId === spot.id && img.complete && img.naturalWidth) {
+        img.style.visibility = 'visible';
+        return;
+      }
+      img.style.visibility = 'hidden';
+      const image = await prepareEchoImage(spot);
+      // A slower previous request must never replace the latest place image.
+      if (request !== echoImageRequest || !image) return;
+      image.id = 'echoPlaceImage';
+      image.alt = spot.name;
+      image.dataset.placeId = spot.id;
+      image.style.visibility = 'visible';
+      document.getElementById('echoPlaceImage').replaceWith(image);
     }
 
     function resizeTextarea(textarea) {
