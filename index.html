@@ -7,7 +7,7 @@
   <style>
     @font-face {
       font-family: "Taipei Sans";
-      src: url("assets/fonts/TaipeiSans-Light.ttf") format("truetype");
+      src: url("assets/optimized-v1/fonts/TaipeiSans-Light.woff2") format("woff2");
       font-weight: 300;
       font-style: normal;
       font-display: swap;
@@ -15,7 +15,7 @@
 
     @font-face {
       font-family: "Taipei Sans";
-      src: url("assets/fonts/TaipeiSans-Regular.ttf") format("truetype");
+      src: url("assets/optimized-v1/fonts/TaipeiSans-Regular.woff2") format("woff2");
       font-weight: 600;
       font-style: normal;
       font-display: swap;
@@ -68,7 +68,7 @@
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      background: url("assets/background/1.png") center / cover no-repeat;
+      background: url("assets/optimized-v1/background/1.webp") center / cover no-repeat;
       filter: blur(6px) saturate(0.86) brightness(1.06);
       transform: scale(1.035);
     }
@@ -1024,9 +1024,9 @@
   ></iframe>
 
   <script>
-    const asset = name => `assets/visual/${encodeURIComponent(name)}`;
-    const posterAsset = name => `assets/video-posters-corrected/${encodeURIComponent(name)}`;
-    const videoAsset = name => `assets/video/${encodeURIComponent(name)}`;
+    const asset = name => `assets/optimized-v1/visual/${encodeURIComponent(name.replace(/\.png$/, '.webp'))}`;
+    const posterAsset = name => `assets/optimized-v1/posters/${encodeURIComponent(name.replace(/\.png$/, '.webp'))}`;
+    const videoAsset = name => `assets/optimized-v1/video/${encodeURIComponent(name)}`;
 
     const stages = {
       intro: document.getElementById('stageIntro'),
@@ -1402,7 +1402,7 @@
         const index = Number(item.dataset.index);
         if (Math.abs(index - center) > 1) return;
         ensureVideoSource(video);
-        video.preload = 'auto';
+        video.preload = 'metadata';
         revealVideoWhenPainted(video);
       });
     }
@@ -1531,9 +1531,7 @@
         ...spot.tags.slice(0, 2)
       ].map(item => `<span class="meta">${item}</span>`).join('');
 
-      restartMutedVideo(detailVideo);
       document.getElementById('placeSelect').value = spot.name;
-      updateEchoPlace(spot.name);
       document.getElementById('replyText').textContent = makeReply('', spot.name);
       document.getElementById('replySub').textContent = `记录于「${spot.name}」。这句回应只保留在当前页面里。`;
     }
@@ -1724,8 +1722,6 @@
     renderChips(document.getElementById('askChips'), askSuggestions);
     renderChips(document.getElementById('recommendChips'), recommendFilters);
     fillPlaceSelect();
-    renderDetail(currentSelection);
-    pauseDetailVideos();
   </script>
 </body>
 </html>
